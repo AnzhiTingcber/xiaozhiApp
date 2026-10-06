@@ -1,77 +1,68 @@
 <div align="center">
 
-# 🧭 璃途 Glassway · AI 旅游行程智能规划平台
+# 🏥 硅谷小智 · 医院智能预约挂号助手
 
-**多智能体协作 × RAG 城市知识库 × MCP 工具生态 × 玻璃拟态单页前端**
+**LangChain4j 智能体 × Function Calling 工具调用 × RAG 向量检索 × MongoDB 会话记忆**
 
-[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.java.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.3.5-brightgreen)](https://spring.io/projects/spring-boot)
-[![LangChain4j](https://img.shields.io/badge/LangChain4j-1.21.0-blue)](https://docs.langchain4j.dev/)
+[![Java](https://img.shields.io/badge/Java-17-orange)](https://openjdk.java.net/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.0-brightgreen)](https://spring.io/projects/spring-boot)
+[![LangChain4j](https://img.shields.io/badge/LangChain4j-1.20.0-blue)](https://docs.langchain4j.dev/)
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479a1)](https://www.mysql.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-%E2%89%A56-47A248)](https://www.mongodb.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+[![Pinecone](https://img.shields.io/badge/Pinecone-Serverless-111111)](https://www.pinecone.io/)
 
-*A Multi-Agent travel planning platform — Pipeline + Parallel Retrieval + Budget Feedback Loop, powered by LangChain4j.*
+*A LangChain4j-powered hospital AI assistant — Function Calling + RAG + Persistent Chat Memory.*
 
 </div>
 
 ---
 
-基于 LangChain4j AiServices 的多智能体旅行规划系统：**顺序流水线（偏好 → 目的地）+ 并行检索（航班 / 酒店 / 活动，`CompletableFuture.allOf`）+ 预算反馈闭环（最多 3 轮）**。全程真实调用 LLM，LLM 输出经白名单 / 数值净化后进入共享状态；前端为一张玻璃拟态单页，规划过程实时可视化。
+基于 LangChain4j AiServices 的智能体应用：**硅谷小智**是一家医院的智能客服与医疗伴诊助手，具备 AI 分导诊、查询号源、预约挂号、取消挂号四大能力。大模型通过 **Function Calling 自主决策**调用挂号工具并落库 MySQL，回答前经 **RAG** 检索医院/科室/医生知识库，多轮对话记忆持久化到 MongoDB，接口全程流式输出。
 
-
-
-## 📸 界面预览
-
-![首页 · 玻璃拟态单页](docs/screenshots/home.png)
-
-![手动规划 + 悬浮对话窗](docs/screenshots/plan-and-chat.png)
-
-![历史会话切换](docs/screenshots/chat-history.png)
-
-![执行轨迹回放](docs/screenshots/trace.png)
+> 项目为 LangChain4j 学习实战项目（硅谷小智课程实战），从单智能体出发，预留了 MCP、多智能体协同的演进路线（见文末 Roadmap）。
 
 ## ✨ 功能特性
 
-- 🧭 **多智能体规划流水线**：偏好校验 → RAG+LLM 甄选目的地 → 航班/酒店/活动三路并行 → 预算评估闭环，LLM 只做语义生成，金额/日期/流程控制全部由确定性代码完成
-- 🌆 **RAG 城市知识库**：10 个中国城市 Markdown 知识库，Pinecone 持久化向量检索（bge-m3），入库幂等，Embedding 不可用时自动降级，扩城市只加文档不改代码
-- 💬 **对话式规划**：SSE 流式对话 + 会话记忆持久化（MongoDB），LLM 通过 Function Calling 自主决定何时触发规划流水线
-- 📊 **执行轨迹可视化**：每个智能体的开始/完成/失败、RAG 检索子步骤、预算每轮闭环全部记录并实时推送，历史规划可回放真实轨迹
-- 🔌 **MCP 客户端**：接入外部 MCP server（默认内置 Open-Meteo 天气 + 官方演示 server），对话中可查实时天气，工具与本地 `@Tool` 并列按需调用
-- 🪟 **玻璃拟态单页前端**：零构建，落地页 + 手动规划面板 + 行程列表/详情 + 悬浮对话窗（含历史会话切换）集成在一张页面
-- 🗄️ **持久化**：规划记录落 MySQL（含完整结果 JSON 与执行轨迹），会话记忆存 MongoDB，跨重启不丢
+- 🤖 **声明式智能体**：一个 `@AiService` 接口完成全部装配——流式模型、记忆、工具、RAG 检索器四件套注解即用
+- 🛠️ **Function Calling**：模型自主决定何时"查号源 / 预约 / 取消预约"，工具执行结果再喂回模型生成自然语言答复，预约数据真实写入 MySQL
+- 🔍 **RAG 知识库**：医院信息、科室信息、医生介绍向量化入 Pinecone，`minScore=0.8` 高置信检索注入上下文，"没指定医生时从知识库找一位医生"
+- 💬 **持久化会话记忆**：`MessageWindowChatMemory`（窗口 100 条）+ MongoDB 存储，按 `memoryId` 隔离多会话，应用重启对话不丢
+- 🌊 **流式输出**：`Flux<String>` 逐 token 响应，配合 `text/event-stream` 风格的 `text/stream` 接口
+- 📋 **提示词工程**：医院客服人设 + 预约必填信息校验规则 + `{{current_date}}` 动态日期，系统提示词外置为资源文件可随时调整
+- 📡 **接口文档**：集成 Knife4j，接口自动生成中文文档
 
 ## 🏗️ 架构
 
-
 ```mermaid
 flowchart LR
-    U["用户<br/>表单 / 对话"] -->|"@Tool planTravel"| P["TravelPlanningPipeline"]
-    subgraph SEQ ["顺序阶段"]
-        P --> PA["PreferenceAgent<br/>确定性校验·不调LLM"]
-        PA --> DA["DestinationAgent<br/>RAG 检索 + LLM 甄选"]
+    U["用户<br/>POST /xiaozhi/chat"] -->|"ChatForm{memoryId, message}"| C["XiaozhiController"]
+    C -->|"Flux 流式返回"| U
+    C --> A["XiaozhiAgent<br/>@AiService 声明式智能体"]
+
+    subgraph LC["LangChain4j 运行时"]
+        A -->|"加载人设与规则"| PT["xiaozhi-promt-template.txt<br/>医院客服系统提示词"]
+        A -->|"回答前语义检索<br/>maxResults=1 · minScore=0.8"| RAG["Pinecone 向量库<br/>医院 / 科室 / 医生知识"]
+        A -->|"每轮对话读写<br/>窗口 100 条"| MEM[("MongoDB<br/>chat_memory_db")]
+        A -->|"Function Calling<br/>模型自主决策"| TOOLS["AppointmentTools<br/>@Tool × 3"]
     end
-    DA --> PE
-    subgraph LOOP ["并行检索 + 预算闭环 · 最多 3 轮"]
-        PE["ParallelExecutor<br/>CompletableFuture.allOf"] --> FA["FlightAgent"] & HA["HotelAgent"] & AA["ActivityAgent"]
-        FA & HA & AA --> BA["BudgetAgent<br/>BigDecimal 精确算账"]
-        BA -->|"超支 → 压力等级+1 重新规划"| PE
-    end
-    BA --> DB[("MySQL<br/>plan_record + 轨迹")]
-    BA -->|"SSE"| U
+
+    TOOLS -->|"MyBatis-Plus"| DB[("MySQL<br/>guiguxiaozhi.appointment")]
 ```
 
+**工具调用闭环（这就是"智能体"的运行方式）**：
 
-| Agent | 调用 LLM | 职责与防护 |
+1. 用户消息进入 `XiaozhiAgent`，LangChain4j 把 3 个 `@Tool` 的方法签名与描述生成 JSON Schema，随请求一并发给大模型；
+2. 模型结合系统提示词、RAG 检索结果与对话记忆推理，**自主决定**是否调用工具（返回 tool-call 而非普通文本）；
+3. 框架在本地执行对应 Java 方法，预约记录写入 MySQL；
+4. 执行结果作为"观察"回喂模型，模型据此生成最终自然语言回答流式输出。
+
+> 一句话：业务代码里没有任何一行去调用 `bookAppointment()`——什么时候预约、怎么收集信息，全是模型自己决定的。把 `tools` 这行配置删掉，项目就退化成一个普通的"带知识库的聊天机器人"。
+
+| 工具（`@Tool`） | 职责 | 落库 |
 |---|---|---|
-| `PreferenceAgent` | ❌ | 卫语句确定性校验，精确可复现 |
-| `DestinationAgent` | ✅ | RAG 语义检索候选城市，LLM 只能在白名单内选择；失败回退关键词打分 |
-| `FlightAgent` | ✅ 并行 | LLM 生成候选 + 推荐；净化过滤非法价格，推荐号必须命中候选 |
-| `HotelAgent` | ✅ 并行 | 晚数/间数由代码计算；星级钳制 2~5、房价过滤 |
-| `ActivityAgent` | ✅ 并行 | 代码枚举日期，知识库真实景点池注入提示词，缺失日期兜底补齐 |
-| `BudgetAgent` | ⚠️ 仅建议 | 金额用 `BigDecimal` 确定性汇总；超支时 LLM 生成量化调整建议 |
-
-**设计原则**：LLM 负责语义生成，确定性代码负责校验、金额与流程控制；失败路径全部收敛（单 Agent 异常舱壁隔离 → 状态机 `FAILED`；Embedding 不可用 → 全量候选；LLM 失败 → 确定性兜底）。
+| `预约挂号 bookAppointment` | 查重 → 防幻觉清 id → 写入预约记录 | MySQL `appointment` |
+| `取消预约挂号 cancelAppointment` | 存在校验 → 删除预约记录 | MySQL `appointment` |
+| `查询是否有号源 queryDepartment` | 号源查询（**当前为占位实现，固定返回 true**，见 Roadmap） | — |
 
 ## 🚀 快速开始
 
@@ -79,36 +70,67 @@ flowchart LR
 
 | 依赖 | 要求 |
 |---|---|
-| JDK | 21 |
-| Maven | 3.9+ |
-| MySQL | 8.x（库名 `travel_planner`，启动自动建表） |
+| JDK | 17 |
+| Maven | 3.6.3+（Spring Boot 3.5 的硬性要求） |
+| MySQL | 8.x（库名 `guiguxiaozhi`） |
 | MongoDB | 4.x+（默认 `localhost:27017`） |
-| LLM API Key | 任意 OpenAI 兼容端点（智谱 / DeepSeek / 通义 / OpenAI / Ollama） |
-| Node.js | 可选，仅 MCP 客户端需要 |
+| Pinecone | Serverless 账号（索引首次启动自动创建） |
+| LLM | 任意 OpenAI 兼容端点（默认智谱 GLM） |
 
-### 1. 配置密钥
+### 1. 初始化 MySQL
 
-支持环境变量（优先）或本项目根目录的 `application-local.yml`（建议加入 `.gitignore`）：
-
-```yaml
-app:
-  llm:
-    api-key: <你的 LLM Key>
-  rag:
-    embedding-api-key: <Embedding Key，可空>
-    pinecone-api-key: <Pinecone Key，可空>
+```sql
+CREATE DATABASE guiguxiaozhi DEFAULT CHARACTER SET utf8mb4;
+USE guiguxiaozhi;
+CREATE TABLE appointment (
+  id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+  username    VARCHAR(64)  COMMENT '用户姓名',
+  id_card     VARCHAR(32)  COMMENT '身份证号',
+  department  VARCHAR(64)  COMMENT '预约科室',
+  date        VARCHAR(32)  COMMENT '预约日期',
+  time        VARCHAR(16)  COMMENT '上午/下午',
+  doctor_name VARCHAR(64)  COMMENT '医生名称'
+);
 ```
 
-常用 LLM 端点（OpenAI 兼容协议，改 `LLM_BASE_URL` + `LLM_MODEL_NAME` 即可）：
+### 2. 配置密钥
 
-| 厂商 | LLM_BASE_URL | 模型示例 |
+编辑 `src/main/resources/application.yml`（该文件含密钥，建议加入 `.gitignore`，勿提交）：
+
+```yaml
+langchain4j:
+  open-ai:
+    streaming-chat-model:
+      base-url: https://open.bigmodel.cn/api/paas/v4   # 智谱 OpenAI 兼容端点
+      api-key: <你的 LLM API Key>
+      model-name: glm-4.5-air
+    embedding-model:
+      base-url: https://api.siliconflow.cn/v1          # 硅基流动
+      api-key: <你的 Embedding API Key>
+      model-name: BAAI/bge-m3
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/chat_memory_db
+  datasource:
+    url: jdbc:mysql://localhost:3306/guiguxiaozhi?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: <你的 MySQL 密码>
+
+pinecone:
+  api-key: <你的 Pinecone API Key>
+```
+
+常用 LLM 端点（OpenAI 兼容协议，替换 `base-url` + `model-name` 即可切换厂商）：
+
+| 厂商 | base-url | 模型示例 |
 |---|---|---|
 | 智谱 AI | `https://open.bigmodel.cn/api/paas/v4` | `glm-4.5-air` |
 | DeepSeek | `https://api.deepseek.com/v1` | `deepseek-chat` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o-mini` |
-| Ollama（本地） | `http://localhost:11434/v1` | `qwen2.5:7b` |
 
-### 2. 启动
+### 3. 启动
 
 ```bash
 mvn spring-boot:run
@@ -116,111 +138,54 @@ mvn spring-boot:run
 
 | 入口 | 地址 |
 |---|---|
-| **平台首页（GLASSWAY 单页）** | <http://localhost:8080/> |
+| 对话接口 | `POST http://localhost:8080/xiaozhi/chat` |
 | 接口文档 Knife4j | <http://localhost:8080/doc.html> |
-| 健康检查 | <http://localhost:8080/api/health> |
 
-> 一次完整规划约发起 5~7 次 LLM 调用（并行阶段 3 次同时进行），端到端 40~150 秒。
-
-### 3. 测试
+### 4. 调用示例
 
 ```bash
-mvn test
+curl -N -X POST http://localhost:8080/xiaozhi/chat \
+  -H "Content-Type: application/json" \
+  -d '{"memoryId": 1, "message": "我最近经常头晕，应该挂什么科？"}'
 ```
 
-5 个用例（健康检查 / 输入校验 400 / LLM 不可达 502 收敛 / 知识库 / 系统状态），使用假 Key + 不可达端点，不产生真实费用，可在 CI 直接运行。
+- `memoryId`：会话 ID，相同 `memoryId` 共享一份记忆（存 MongoDB）
+- 响应为 `text/stream;charset=utf-8` 流式文本
+- 换一句试试："帮我明天上午预约神经内科的号"——观察日志，能看到模型发起的 tool-call 与工具执行记录
 
-## 🌆 RAG 城市知识库
+## 🧠 记忆与 RAG
 
-知识来自 `src/main/resources/knowledge/*.md`（每城一篇，含亮点 / 经典活动与参考价）：
+**会话记忆**：`MongoChatMemoryStore` 实现 LangChain4j 的 `ChatMemoryStore` SPI，消息列表经 `ChatMessageSerializer` 序列化为 JSON 存入 MongoDB（`upsert` 按 `memoryId` 更新），读取时反序列化还原，跨重启不丢。
 
-- **知识可运营**：新增城市只需加文档、重启即生效，不改代码
-- **双层供给**：结构化字段（亮点/活动/消费水平）直接注入 Agent 提示词，全文向量块用于语义检索排序
-- **入库幂等**：分块 ID = `uuid(城市#块序号)` 确定性生成，Pinecone 按 ID 覆盖写；先向量化后写库；写入前清空重灌，不留过期碎片
-- **双重降级**：Embedding 服务不可用时语义检索退化为全量候选，本地解析路径零外部依赖
-
-## 🔌 MCP 客户端
-
-对话助理可调用外部 MCP server 的工具（与本地 `@Tool` 并列，模型按需选择）：
-
-```yaml
-app:
-  mcp:
-    enabled: ${MCP_ENABLED:false}   # 开启后重启生效
-    servers:
-      - name: weather
-        type: stdio
-        command: [npx, -y, open-meteo-mcp]      # Open-Meteo 天气，免费无 Key
-      # - name: remote
-      #   type: http
-      #   url: http://localhost:3001/mcp          # Streamable HTTP 端点
-```
-
-- 支持 **stdio**（拉起子进程，Windows 下自动经 `cmd /c`）与 **Streamable HTTP** 双传输
-- 启动期逐个握手探活，单个 server 连不上只告警跳过；`McpClient` 实现 `AutoCloseable`，应用关闭时显式释放
-- 内置默认配置：`@modelcontextprotocol/server-everything`（链路验证）+ `open-meteo-mcp`（实时天气）
-
-## 💬 对话式规划与执行轨迹
-
-- 对话入口 `POST /api/chat` 为标准 SSE，命名事件：`token`（逐 token 正文）、`trace`（执行轨迹 JSON）、`done`（结束哨兵）
-- 前端悬浮对话窗实时点亮多智能体轨迹（转圈=执行中，✓/✕=完成/失败，含耗时与结果摘要），完成后自动折叠
-- 对话助理具备**历史会话切换 / 新会话 / 删除会话记忆**能力；信息不足时先追问而非编造参数
-- 规划能力不在对话里"变味"：LLM 只决定"何时调用 + 填参数"，规划仍由同一条确定性流水线执行
-
-## 💾 数据持久化
-
-| 存储 | 库 | 内容 |
-|---|---|---|
-| MySQL | `travel_planner` | `plan_record`：输入参数回显 + 完整结果 JSON + 执行轨迹，启动自动建表 |
-| MongoDB | `travel_planner_memory` | `chat_memory`：按 sessionId 隔离的对话消息（窗口 100 条），跨重启不丢 |
-
-## 📡 API 一览
-
-| 方法 | 路径 | 说明 |
-|---|---|---|
-| POST | `/api/plan` | 表单入口规划（同步，40~150 秒） |
-| POST | `/api/chat` | 对话入口（SSE：token/trace/done） |
-| GET | `/api/chat/sessions` · `/{sid}/messages` · DELETE `/{sid}` | 会话列表 / 历史 / 删除 |
-| GET | `/api/plans[?sessionId=]` · `/{id}` · DELETE `/{id}` | 规划历史聚合 / 详情 / 删除 |
-| GET | `/api/knowledge/cities` · `/api/system/status` · `/api/health` | 知识库 / 系统状态 / 健康检查 |
-
-完整文档见 Knife4j（`/doc.html`），接口已用 `@Tag/@Operation/@Schema` 标注中文说明。
+**向量检索**：`EmbeddingStoreConfig` 使用 Pinecone Serverless（AWS `us-east-1`），索引 `xiaozhi-index`、命名空间 `xiaozhi-namespace` 不存在时自动创建，向量维度自动对齐 `bge-m3`（1024 维）。检索器每次回答最多取 1 条、最低得分 0.8，保证注入的是高置信知识。
 
 ## 📁 项目结构
 
 ```
-src/main/java/com/travel
-├── agent/          # 模板方法基类 + 6 个智能体（含 llm/ AiService 接口）
-├── config/         # LLM/RAG/MCP/线程池/记忆/建表 配置
-├── controller/     # REST 入口（规划/对话/历史/知识库/系统状态）
-├── mapper/entity/  # MyBatis-Plus 持久层
-├── model/          # 领域模型 + TraceEvent/TraceCollector 轨迹
-├── orchestrator/   # 流水线 / 并行执行器 / 预算闭环
-├── rag/            # 城市知识库（向量化 + 降级）
-├── service/        # 应用服务（规划/记录/对话/轨迹发布）
-├── store/          # MongoDB 会话记忆
-└── tools/          # LLM 可调用工具（规划/查单/删单）
+src/main/java/com/tinglan
+├── assistant/    # XiaozhiAgent：@AiService 声明式智能体入口（模型/记忆/工具/RAG 装配点）
+├── bean/         # ChatForm 请求体、XiaozhiChatMessages Mongo 文档
+├── config/       # XiaozhiAgentConfig（记忆提供者+检索器）、EmbeddingStoreConfig（Pinecone）
+├── controller/   # XiaozhiController：POST /xiaozhi/chat 流式接口
+├── entity/       # Appointment 预约实体（MyBatis-Plus）
+├── mapper/       # AppointmentMapper
+├── service/      # AppointmentService 预约业务
+├── store/        # MongoChatMemoryStore：ChatMemoryStore 的 MongoDB 实现
+└── tools/        # AppointmentTools：@Tool 预约 / 取消 / 查号源
 src/main/resources
-├── knowledge/      # 10 个城市知识库 Markdown
-└── static/         # GLASSWAY 单页前端（index.html）+ 旧版备用页
+├── xiaozhi-promt-template.txt   # 系统提示词：人设、分导诊、预约必填规则
+└── mappper/AppointmentMapper.xml
 ```
 
-## 🗺️ Roadmap
+## 🗺️ Roadmap（进阶演进路线）
 
-- [ ] 管理端锁定模块（酒店库 / 航班库主数据 + Agent 接入）
-- [ ] 规划流水线消费实时天气（雨天自动调整行程）
-- [ ] 行程单导出（PDF / ICS 日历）
-- [ ] 测试数据库隔离（H2 内存库）
+- [ ] **补齐真实号源查询**：`queryDepartment` 目前为占位实现，接入医生排班数据后 agent 才有"真判断"
+- [ ] **接入 MCP 工具生态**：引入 `langchain4j-mcp`，用 `McpClient` + `McpToolProvider` 把挂号工具迁出为独立 MCP Server（供多端复用），或接入地图导航 / 联网搜索等现成 Server，与本地 `@Tool` 并列按需调用
+- [ ] **多智能体协同（方案 A · 专家即工具）**：把提示词里的三个角色拆成独立专家——分导诊专家（只挂科室 RAG）、医疗顾问专家、挂号专家，包装成主 agent 的 `@Tool`，由模型自主调度
+- [ ] **多智能体协同（方案 B · Supervisor 编排）**：引入 `langchain4j-agentic` 模块，`supervisorBuilder` 声明调度员，`AgenticScope` 在专家间共享状态（如分导诊产出的科室名直接被挂号专家读取）；配合 `conditionalBuilder`（按意图路由）与 `sequenceBuilder`（导诊 → 挂号接力）
+- [ ] **并行智能体**：`parallelBuilder` 实现多学科会诊（内科/外科/营养科并行给意见后汇总）、`parallelMapperBuilder` 批量解读多份检查报告
+- [ ] **A2A 跨进程协作**：`langchain4j-agentic-a2a` 把远程 agent 当子 agent 调用——MCP 让 agent 挂上"工具"，A2A 让 agent 调用"别的 agent"
 
 ## 📄 License
 
-本项目基于 **[MIT License](LICENSE)** 开源发布。
-
-- ✅ **允许**：自由使用、复制、修改、合并、分发（含商用），只需在软件副本中保留原始版权声明与许可文本
-- ❌ **免责**：软件按"现状"提供，作者不对任何使用后果承担责任
-- 📦 **第三方依赖**：Spring Boot、LangChain4j、MyBatis-Plus、Knife4j 等各自遵循其原始开源协议，MIT 仅覆盖本项目自有代码
-- ✏️ `LICENSE` 文件中的版权行默认署名 `Glassway Contributors`，可自行替换为你的 GitHub 用户名或真实姓名
-
----
-
-⭐ 觉得有用的话点个 Star 支持一下～
+仅供学习交流使用。
