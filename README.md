@@ -159,26 +159,6 @@ curl -N -X POST http://localhost:8080/xiaozhi/chat \
 
 **向量检索**：`EmbeddingStoreConfig` 使用 Pinecone Serverless（AWS `us-east-1`），索引 `xiaozhi-index`、命名空间 `xiaozhi-namespace` 不存在时自动创建，向量维度自动对齐 `bge-m3`（1024 维）。检索器每次回答最多取 1 条、最低得分 0.8，保证注入的是高置信知识。
 
-## 🧪 测试与验证
-
-三个测试类分别量化三条核心指标，位于 `src/test/java/com/tinglan/test/`，均采用"免费档 + 精确档"两档设计：
-
-| 测试类 | 验证指标 | 免费档（默认可跑） | 精确档（`@Disabled` 手动跑） |
-|---|---|---|---|
-| `TokenWindowSavingTest` | 滑动窗口的 Token 节省比例 | 同一 30 轮对话脚本，离线粗估三种窗口策略的累计 Prompt Token | 调真实 LLM 读取接口 `usage` 字段精确计量（约 90 次请求） |
-| `RagThresholdEvalTest` | 相似度阈值对无效回答率的影响 | 组件级：不调 LLM，验证 `minScore=0.8` 挡住知识库外问题的检索污染 | 端到端：无阈值 vs 有阈值两组助手作答 + LLM-as-Judge 判定无效回答率（约 64 次请求） |
-| `ChatLoadTest` | 接口并发容量（QPS / 延迟分位数 / 错误率） | — | 参数化压测：`-Dconcurrency=50 -Drounds=4`，输出成功率 / QPS / P50 / P95 |
-
-> **实测参考**：
-> ① Token 窗口（30 轮对话脚本，离线粗估档）：20 条窗口相比不控制上下文**节省 44.1%** Prompt Token；100 条窗口在短对话（<50 轮）下节省为 0——窗口小于实际对话长度才能生效。
-> ② RAG 阈值（组件级实测）：8 个知识库外干扰问题，无阈值时每个泄漏 3 条不相关片段（合计 24 条），0.8 阈值下**泄漏 0 条（100% 拦截）**。端到端"无效回答率"的具体改善幅度由 LLM-as-Judge 用例（`@Disabled`）产出。
-
-运行说明：
-
-- `@Disabled` 用例需手动去掉注解运行，会消耗真实 Token 与费用
-- `RagThresholdEvalTest` 要求 Pinecone 索引 `xiaozhi-index` 已入库知识文档，索引为空时自动跳过并提示
-- 全链路压测的 QPS 瓶颈在 LLM 推理时长（秒级），QPS ≈ 并发数 ÷ 平均延迟；验证应用层容量时，把模型 `base-url` 临时指向本地 mock 模型再压
-
 ## 📁 项目结构
 
 ```
@@ -208,4 +188,3 @@ src/main/resources
 
 ## 📄 License
 
-仅供学习交流使用。
