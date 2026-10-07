@@ -31,7 +31,7 @@ public class XiaozhiAgentConfig {
         return memoryId -> MessageWindowChatMemory
                 .builder()
                 .id(memoryId)
-                .maxMessages(100)
+                .maxMessages(50)
                 .chatMemoryStore(mongoChatMemoryStore)
                 .build();
     }
